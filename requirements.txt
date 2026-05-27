@@ -1,0 +1,6 @@
+streamlit
+groq
+pandas
+python-dotenv
+catboost
+scikit-learn
