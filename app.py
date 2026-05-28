@@ -1,6 +1,5 @@
 """
 PostBot — India Post District Intelligence Engine
-v10: True CSS fixed sidebar (no layout push) · Claude-style chat · Perfect palette
 """
 
 import streamlit as st
@@ -32,6 +31,7 @@ def init():
         "dark_mode":         False,
         "district_analysed": False,
         "sidebar_open":      True,
+        "initial_sidebar_state": "collapsed",
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -76,65 +76,120 @@ def inject_css():
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-/* ── Reset ── */
 *, *::before, *::after {{ box-sizing: border-box; }}
 html, body {{ margin:0; padding:0; background:{c['bg']} !important; }}
 .stApp {{ background:{c['bg']} !important; }}
 
-/* ── Hide all Streamlit chrome ── */
-/* Remove ghost keyboard toggle text */
-[data-testid="stSidebarCollapseButton"] {{
-    display: none !important;
-}}
-
-button[title="View sidebar"] {{
-    display: none !important;
-}}
-
-button[title="Hide sidebar"] {{
-    display: none !important;
-}}
-
-/* Remove floating accessibility text */
-div[aria-label="dialog"] {{
-    display: none !important;
-}}
-
+/* ════ HIDE STREAMLIT CHROME ════ */
 #MainMenu, footer,
 [data-testid="stSidebarNav"],
 .stDeployButton,
-[data-testid="stToolbarActions"],
 [data-testid="stAppDeployButton"],
-header[data-testid="stHeader"],
-[data-testid="stToolbar"],
-[data-testid="stSidebarCollapsedControl"],
-[data-testid="collapsedControl"],
-[data-testid="stExpandSidebarButton"],
-button[kind="header"]
+div[aria-label="dialog"]
 {{ display:none !important; visibility:hidden !important; }}
 
-/* ── Sidebar ───────────────────────────────────────── */
-
-[data-testid="stSidebar"] {{
-    background: {c['sidebar']} !important;
-    border-right: 2px solid {c['border']}33 !important;
-    min-width: 240px !important;
-    max-width: 240px !important;
-    width: 240px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    top: 0 !important;
+/* ── Desktop only: hide header + all toggle buttons ── */
+@media (min-width: 769px) {{
+    [data-testid="stSidebarHeader"],
+    button[title="Hide sidebar"]
+    {{ display:none !important; visibility:hidden !important; }}
 }}
 
-[data-testid="stSidebar"][aria-expanded="false"] {{
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    transform: none !important;
-    min-width: 240px !important;
-    width: 240px !important;
+/* ════ SIDEBAR — DESKTOP: always visible ════ */
+@media (min-width: 769px) {{
+    [data-testid="stSidebar"],
+    [data-testid="stSidebar"][aria-expanded="false"],
+    [data-testid="stSidebar"][aria-expanded="true"] {{
+        position: relative !important;
+        left: auto !important;
+        transform: none !important;
+        background: {c['sidebar']} !important;
+        border-right: 2px solid {c['border']}33 !important;
+        min-width: 240px !important;
+        max-width: 240px !important;
+        width: 240px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        top: 0 !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }}
 }}
 
+/* ── Tablet ── */
+@media (min-width: 769px) and (max-width: 1024px) {{
+    [data-testid="stSidebar"],
+    [data-testid="stSidebar"][aria-expanded="false"],
+    [data-testid="stSidebar"][aria-expanded="true"] {{
+        min-width: 200px !important;
+        max-width: 200px !important;
+        width: 200px !important;
+    }}
+}}
+
+/* ════ SIDEBAR — MOBILE: slide in/out ════ */
+@media (max-width: 768px) {{
+
+    [data-testid="stSidebar"],
+    [data-testid="stSidebar"][aria-expanded="false"],
+    [data-testid="stSidebar"][aria-expanded="true"] {{
+        position: fixed !important;
+        top: 0 !important;
+        height: 100vh !important;
+        width: 260px !important;
+        min-width: 260px !important;
+        max-width: 260px !important;
+        z-index: 9998 !important;
+        background: {c['sidebar']} !important;
+        transition: left 0.25s ease !important;
+        transform: none !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }}
+
+    [data-testid="stSidebar"][aria-expanded="false"] {{
+        left: -270px !important;
+    }}
+    
+    [data-testid="stSidebar"][aria-expanded="false"] {{
+        pointer-events: none !important;
+    }}
+
+    [data-testid="stSidebar"][aria-expanded="true"] {{
+        pointer-events: auto !important;
+    }}
+
+    [data-testid="stSidebar"][aria-expanded="true"] {{
+        left: 0 !important;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.25) !important;
+    }}
+
+    /* Main content full width on mobile */
+    section[data-testid="stMain"] {{
+        width: 100vw !important;
+        min-width: 0 !important;
+        margin-left: 0 !important;
+        flex: 1 !important;
+    }}
+
+    [data-testid="stAppViewContainer"] {{
+        overflow-x: hidden !important;
+    }}
+
+    /* Push content below fixed header */
+    [data-testid="stMainBlockContainer"],
+    .block-container {{
+        padding-top: 0px !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        max-width: 100vw !important;
+        width: 100% !important;
+    }}
+}}
+
+/* ════ SIDEBAR INTERNALS ════ */
 [data-testid="stSidebar"] > div:first-child {{
     padding: 0px 10px 2px !important;
     margin-top: 0 !important;
@@ -145,15 +200,12 @@ button[kind="header"]
 [data-testid="stSidebarContent"],
 section[data-testid="stSidebar"],
 section[data-testid="stSidebarContent"],
-[data-testid="stSidebarUserContent"],
-.css-1d391kg,
-.css-6qob1r {{
+.css-1d391kg, .css-6qob1r {{
     padding-top: 0 !important;
     margin-top: 0 !important;
 }}
 
-/* ── Kill the sidebar header space (collapse button container) ── */
-[data-testid="stSidebarHeader"] {{
+[data-testid="stSidebarHeader"], .css-eelgd2m4 {{
     display: none !important;
     height: 0 !important;
     min-height: 0 !important;
@@ -162,561 +214,344 @@ section[data-testid="stSidebarContent"],
     overflow: hidden !important;
 }}
 
-/* ── Kill UserContent bottom padding (sidebarTopSpace) ── */
 [data-testid="stSidebarUserContent"] {{
     padding-top: 30px !important;
     padding-bottom: 0 !important;
     margin-top: 0 !important;
 }}
 
-/* ── Target the Emotion class directly (eelgd2m4 = stSidebarHeader) ── */
-.css-eelgd2m4,
-div[data-testid="stSidebarHeader"] {{
-    display: none !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}}
-
-/* ── Main content area ── */
-.block-container {{
-    max-width: 100% !important;
-    padding-top: 6 !important;
-    padding-bottom: 0 !important;
-
-    padding-left: 24px !important;
-    padding-right: 24px !important;
-
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-}}
-[data-testid="stMainBlockContainer"] {{
-    padding-top: 0 !important;
-    padding-left: 24px !important;
-    padding-right: 24px !important;
-    max-width: 100% !important;
-}}
-section[data-testid="stMain"] > div:first-child,
-section.main > div:first-child {{
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}}
-
-/* Remove remaining top whitespace */
-section.main > div {{
-    padding-top: 0 !important;
-}}
-
-section[data-testid="stMain"] > div {{
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}}
-
-[data-testid="stAppViewContainer"] {{
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}}
-
-/* ════ PAGE CHROME ════ */
-/* Force sidebar to stay in layout — never slide off screen */
-[data-testid="stSidebar"] {{
-    left: 0 !important;
-    transform: translateX(0) !important;
-}}
 section[data-testid="stSidebarContent"] {{
     display: flex !important;
     flex-direction: column !important;
     height: 100% !important;
 }}
-.pb-page {{ padding-bottom: 20px; }}
-.pb-page-chat {{ min-height: 100vh; }}
+
+/* ════ MAIN CONTENT — DESKTOP ════ */
+@media (min-width: 769px) {{
+    .block-container {{
+        max-width: 100% !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }}
+    [data-testid="stMainBlockContainer"] {{
+        padding-top: 0 !important;
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+        max-width: 100% !important;
+    }}
+    section[data-testid="stMain"] > div,
+    section.main > div,
+    [data-testid="stAppViewContainer"] {{
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }}
+}}
 
 /* ════ PAGE WRAPPERS ════ */
 .pb-page {{
-    padding: 0 !important;
-    margin: 0 !important;
-    background: {c['bg']};
-    font-family: 'DM Sans', sans-serif;
+    padding: 0 !important; margin: 0 !important;
+    background: {c['bg']}; font-family: 'DM Sans', sans-serif;
 }}
-.pb-page-chat {{
-    background: {c['bg']};
-}}
-
+.pb-page-chat {{ background: {c['bg']}; min-height: 100vh; }}
+.pb-page {{ padding-bottom: 20px; }}
 
 /* ════ TYPOGRAPHY ════ */
-h1,h2,h3,h4 {{
-    font-family: 'Playfair Display', serif !important;
-    color: {c['text']} !important;
-}}
-
-.stMarkdown p {{
-    font-size:14px !important;
-}}
-
-/* global markdown text */
-.stMarkdown {{
-    color: {c['text2']} !important;
-}}
+h1,h2,h3,h4 {{ font-family: 'Playfair Display', serif !important; color: {c['text']} !important; }}
+.stMarkdown {{ color: {c['text2']} !important; }}
+.stMarkdown p {{ font-size:14px !important; }}
 .pb-h1 {{
-    font-family: 'Playfair Display', serif;
-    font-size: 42px; font-weight: 700;
+    font-family: 'Playfair Display', serif; font-size: 42px; font-weight: 700;
     color: {c['text']}; line-height: 1.15; margin-bottom: 10px;
 }}
 .pb-h2 {{
-    font-family: 'Playfair Display', serif;
-    font-size: 22px; font-weight: 700;
+    font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700;
     color: {c['text']}; margin-bottom: 3px;
 }}
 .pb-label {{
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10px; font-weight: 700;
-    color: {c['muted']};
-    text-transform: uppercase; letter-spacing: 1.3px;
-    margin-bottom: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 700;
+    color: {c['muted']}; text-transform: uppercase; letter-spacing: 1.3px; margin-bottom: 8px;
 }}
-.pb-sub {{
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px; color: {c['muted']};
-    margin-bottom: 14px;
-}}
+.pb-sub {{ font-family: 'DM Sans', sans-serif; font-size: 12px; color: {c['muted']}; margin-bottom: 14px; }}
 
 /* ════ CARDS ════ */
 .pb-card {{
-    background: {c['card']};
-    border: 1px solid {c['border']}2A;
-    border-radius: 12px;
-    padding: 16px 18px;
-    margin-bottom: 12px;
-}}
-.pb-card-l {{
-    border-left: 3px solid {c['accent']};
-}}
-.pb-card-t {{
-    border-top: 3px solid {c['accent']};
+    background: {c['card']}; border: 1px solid {c['border']}2A;
+    border-radius: 12px; padding: 16px 18px; margin-bottom: 12px;
 }}
 .pb-num {{
-    font-family: 'Playfair Display', serif;
-    font-size: 38px; font-weight: 700;
+    font-family: 'Playfair Display', serif; font-size: 38px; font-weight: 700;
     color: {c['accent']}; line-height: 1; margin-bottom: 3px;
 }}
 
 /* ════ INPUTS ════ */
 .stTextInput > div > div > input {{
-    background: {c['input_bg']} !important;
-    border: 1.5px solid {c['border']}55 !important;
-    border-radius: 10px !important;
-    color: {c['text']} !important;
-    font-size: 14px !important;
-    padding: 11px 14px !important;
+    background: {c['input_bg']} !important; border: 1.5px solid {c['border']}55 !important;
+    border-radius: 10px !important; color: {c['text']} !important;
+    font-size: 14px !important; padding: 11px 14px !important;
     font-family: 'DM Sans', sans-serif !important;
 }}
 .stTextInput > div > div > input:focus {{
     border-color: {c['accent']} !important;
-    box-shadow: 0 0 0 3px {c['accent']}12 !important;
-    outline: none !important;
+    box-shadow: 0 0 0 3px {c['accent']}12 !important; outline: none !important;
 }}
 .stTextInput label, .stSelectbox label {{
-    color: {c['muted']} !important; font-size: 10px !important;
-    font-weight: 700 !important; text-transform: uppercase !important;
-    letter-spacing: 0.8px !important;
+    color: {c['muted']} !important; font-size: 10px !important; font-weight: 700 !important;
+    text-transform: uppercase !important; letter-spacing: 0.8px !important;
     font-family: 'DM Sans', sans-serif !important;
 }}
-.stTextInput {{
-    margin-bottom: -8px !important;
-}}
-
-.stTextInput > div {{
-    margin-bottom: -2px !important;
-}}
+.stTextInput {{ margin-bottom: -8px !important; }}
+.stTextInput > div {{ margin-bottom: -2px !important; }}
 .stSelectbox > div > div {{
-    background: {c['input_bg']} !important;
-    border: 1.5px solid {c['border']}55 !important;
+    background: {c['input_bg']} !important; border: 1.5px solid {c['border']}55 !important;
     border-radius: 10px !important; color: {c['text']} !important;
 }}
+div[data-baseweb="popover"] {{ background: {c['card']} !important; }}
+div[data-baseweb="select"] > div {{ background: {c['input_bg']} !important; color: {c['text']} !important; }}
+ul {{ background: {c['card']} !important; }}
+li[role="option"] {{ background: {c['card']} !important; color: {c['text']} !important; }}
+li[role="option"]:hover {{ background: {c['accent']}22 !important; color: {c['text']} !important; }}
 
-/* Dropdown popup */
-div[data-baseweb="popover"] {{
-    background: {c['card']} !important;
-}}
-
-div[data-baseweb="select"] > div {{
-    background: {c['input_bg']} !important;
-    color: {c['text']} !important;
-}}
-
-ul {{
-    background: {c['card']} !important;
-}}
-
-li[role="option"] {{
-    background: {c['card']} !important;
-    color: {c['text']} !important;
-}}
-
-li[role="option"]:hover {{
-    background: {c['accent']}22 !important;
-    color: {c['text']} !important;
-}}
-
-/* Main page buttons only */
-
+/* ════ BUTTONS ════ */
 section[data-testid="stMain"] .stButton > button {{
-    background: {c['accent']} !important;
-    color: #FFF8F0 !important;
-    border: 2px solid {c['accent']} !important;
-    border-radius: 10px !important;
-    font-weight: 600 !important;
-    font-size: 13px !important;
-    padding: 8px 18px !important;
-    width: 100% !important;
-    transition: all 0.15s !important;
-    font-family: 'DM Sans', sans-serif !important;
+    background: {c['accent']} !important; color: #FFF8F0 !important;
+    border: 2px solid {c['accent']} !important; border-radius: 10px !important;
+    font-weight: 600 !important; font-size: 13px !important;
+    padding: 8px 18px !important; width: 100% !important;
+    transition: all 0.15s !important; font-family: 'DM Sans', sans-serif !important;
 }}
-
 section[data-testid="stMain"] .stButton > button:hover {{
-    background: transparent !important;
-    color: {c['accent']} !important;
+    background: transparent !important; color: {c['accent']} !important;
 }}
-
-/* Sidebar buttons */
 [data-testid="stSidebar"] .stButton > button {{
-
-    background: {c['accent']} !important;
-    color: #FFF8F0 !important;
-
-    border: 2px solid {c['accent']} !important;
-    border-radius: 10px !important;
-
-    font-weight: 600 !important;
-    font-size: 13px !important;
-
-    padding: 10px 20px !important;
-
-    width: 100% !important;
-
-    transition: all 0.15s !important;
-
-    font-family: 'DM Sans', sans-serif !important;
-
-    min-height: 36px !important;
-
-    box-shadow: none !important;
+    background: {c['accent']} !important; color: #FFF8F0 !important;
+    border: 2px solid {c['accent']} !important; border-radius: 10px !important;
+    font-weight: 600 !important; font-size: 13px !important;
+    padding: 10px 20px !important; width: 100% !important;
+    transition: all 0.15s !important; font-family: 'DM Sans', sans-serif !important;
+    min-height: 36px !important; box-shadow: none !important;
 }}
-
 [data-testid="stSidebar"] .stButton > button:hover {{
-
-    background: transparent !important;
-    color: {c['accent']} !important;
-
+    background: transparent !important; color: {c['accent']} !important;
     border: 2px solid {c['accent']} !important;
 }}
-
 
 /* ════ CHAT ════ */
 .user-row {{ display:flex; justify-content:flex-end; align-items:flex-end; gap:8px; margin:8px 0; }}
 .user-bubble {{
     background: {c['bubble_u']}; color: #FFF8F0;
-    border-radius: 18px 4px 18px 18px;
-    padding: 11px 16px; max-width: 62%;
+    border-radius: 18px 4px 18px 18px; padding: 11px 16px; max-width: 62%;
     font-family: 'DM Sans', sans-serif; font-size: 13px; line-height: 1.65;
     box-shadow: 0 1px 4px rgba(0,0,0,0.10);
 }}
 .bot-bubble {{
-    background: transparent !important;
-    color: {c['text']} !important;
-
-    border: none !important;
-    box-shadow: none !important;
-
-    border-radius: 0 !important;
-
-    padding: 2px 4px 2px 0 !important;
-
-    max-width: 92% !important;
-
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 13px !important;
-    line-height: 1.6 !important;
+    background: transparent !important; color: {c['text']} !important;
+    border: none !important; box-shadow: none !important; border-radius: 0 !important;
+    padding: 2px 4px 2px 0 !important; max-width: 92% !important;
+    font-family: 'DM Sans', sans-serif !important; font-size: 13px !important;
+    line-height: 1.6 !important; opacity: 1 !important;
 }}
-
-/* remove white markdown/code blocks */
-/* clean markdown/code blocks */
-.bot-bubble pre,
-.bot-bubble code {{
-
-    background: rgba(140,90,60,.06) !important;
-
-    border: none !important;
-    box-shadow: none !important;
-
-    border-radius: 10px !important;
-
-    padding: 10px 12px !important;
-
-    color: {c['text']} !important;
-
-    white-space: pre-wrap !important;
-
-    overflow-x: auto !important;
+.bot-bubble pre, .bot-bubble code {{
+    background: rgba(140,90,60,.06) !important; border: none !important;
+    border-radius: 10px !important; padding: 10px 12px !important;
+    color: {c['text']} !important; white-space: pre-wrap !important;
 }}
-/* ordered list numbers */
-.bot-bubble ol li::marker {{
-    color: {c['text']} !important;
-    opacity: 1 !important;
-    font-weight: 700 !important;
-}}
+.bot-bubble p, .bot-bubble div, .bot-bubble span, .bot-bubble strong,
+.bot-bubble b, .bot-bubble li, .bot-bubble ol li, .bot-bubble ul li,
+.bot-bubble .stMarkdown, .bot-bubble .stMarkdown p, .bot-bubble .stMarkdown li
+{{ color: {c['text']} !important; opacity: 1 !important; }}
+.bot-bubble ol li::marker, .bot-bubble .stMarkdown ol li::marker
+{{ color: {c['text3']} !important; font-weight: 700 !important; opacity: 1 !important; }}
+.bot-bubble ul li::marker {{ color: {c['text']} !important; }}
+.bot-row {{ margin: 6px 0 !important; align-items: flex-start !important; }}
 
-/* unordered bullets */
-.bot-bubble ul li::marker {{
-    color: {c['text']} !important;
-}}
-/* cleaner paragraphs */
-.bot-bubble p {{
-    margin-bottom: 6px !important;
-    color: {c['text']} !important;
-}}
-
-/* compact spacing */
-.bot-row {{
-    margin: 6px 0 !important;
-    align-items: flex-start !important;
-}}
-
-/* chatbot text */
-.bot-bubble p,
-.bot-bubble div,
-.bot-bubble span,
-.bot-bubble strong,
-.bot-bubble b,
-.bot-bubble li {{
-    color: {c['text']} !important;
-}}
-
-/* ordered list numbers */
-.bot-bubble ol li::marker {{
-    color: {c['text3']} !important;
-    font-weight: 700 !important;
-    opacity: 1 !important;
-}}
-
-/* specifically fix numbered lists */
-.bot-bubble ol li,
-.bot-bubble ul li {{
-    color: {c['text']} !important;
-    opacity: 1 !important;
-}}
-
-/* fix bold text */
-.bot-bubble strong,
-.bot-bubble b {{
-    color: {c['text']} !important;
-}}
-
-/* fix markdown containers */
-.bot-bubble .stMarkdown,
-.bot-bubble .stMarkdown p,
-.bot-bubble .stMarkdown li {{
-    color: {c['text']} !important;
-}}
-
-/* remove faded/transparent effect */
-.bot-bubble {{
-    opacity: 1 !important;
-}}
-
-/* bot markdown override */
-.bot-bubble .stMarkdown p,
-.bot-bubble .stMarkdown li,
-.bot-bubble .stMarkdown ol li,
-.bot-bubble .stMarkdown ul li {{
-    color: {c['text']} !important;
-    opacity: 1 !important;
-}}
-
-/* numbered markers */
-.bot-bubble .stMarkdown ol li::marker {{
-    color: {c['text3']} !important;
-    font-weight: 700 !important;
-}}
-
-/* Chip buttons — pill style applied directly to Streamlit buttons in chip area */
 .pb-chips .stButton > button {{
-    background: {c['card']} !important;
-    border: 1.5px solid {c['border']}44 !important;
-    border-radius: 20px !important;
-    color: {c['text3']} !important;
-    font-size: 12px !important;
-    font-weight: 500 !important;
-    padding: 7px 14px !important;
-    min-height: 0 !important;
-    height: auto !important;
-    transition: all 0.15s !important;
-    box-shadow: none !important;
+    background: {c['card']} !important; border: 1.5px solid {c['border']}44 !important;
+    border-radius: 20px !important; color: {c['text3']} !important;
+    font-size: 12px !important; font-weight: 500 !important;
+    padding: 7px 14px !important; min-height: 0 !important;
+    height: auto !important; box-shadow: none !important;
 }}
 .pb-chips .stButton > button:hover {{
-    background: {c['accent']}10 !important;
-    border-color: {c['accent']}66 !important;
+    background: {c['accent']}10 !important; border-color: {c['accent']}66 !important;
     color: {c['accent']} !important;
 }}
 
 /* ════ MISC ════ */
-.stProgress > div > div > div {{
-    background: {c['accent']} !important; border-radius: 4px !important;
-}}
-.stProgress > div > div {{
-    background: {c['border']}22 !important;
-    border-radius: 4px !important; height: 6px !important;
-}}
-div[data-testid="stAlert"] {{
-    border-radius: 10px !important;
-    font-family: 'DM Sans', sans-serif !important;
-}}
+.stProgress > div > div > div {{ background: {c['accent']} !important; border-radius: 4px !important; }}
+.stProgress > div > div {{ background: {c['border']}22 !important; border-radius: 4px !important; height: 6px !important; }}
+div[data-testid="stAlert"] {{ border-radius: 10px !important; font-family: 'DM Sans', sans-serif !important; }}
 ::-webkit-scrollbar {{ width: 4px; }}
-::-webkit-scrollbar-thumb {{
-    background: {c['border']}44; border-radius: 4px;
-}}
+::-webkit-scrollbar-thumb {{ background: {c['border']}44; border-radius: 4px; }}
 
-/* Password eye toggle */
-button[title="Show password text"],
-button[title="Hide password text"] {{
-
-    background: {c['accent']} !important;
-    color: #FFF8F0 !important;
-
-    border: 2px solid {c['accent']} !important;
-    border-left: none !important;
-
-    border-radius: 0 12px 12px 0 !important;
-
-    box-shadow: none !important;
-}}
-
-button[title="Show password text"]:hover,
-button[title="Hide password text"]:hover {{
-
-    background: {c['text3']} !important;
-    color: #FFF8F0 !important;
-}}
-
-/* Password field wrapper */
-div[data-testid="stTextInput"]:has(input[type="password"]) > div {{
-
-    background: transparent !important;
-    border: none !important;
-}}
-
-/* Eye icon outer container */
-div[data-testid="stTextInput"]:has(input[type="password"]) button {{
-
-    background: {c['accent']} !important;
-
-    border: 2px solid {c['accent']} !important;
-    border-left: none !important;
-
-    border-radius: 0 12px 12px 0 !important;
-
-    min-height: 52px !important;
-
-    box-shadow: none !important;
-}}
-
-/* Hover */
-div[data-testid="stTextInput"]:has(input[type="password"]) button:hover {{
-
-    background: {c['text3']} !important;
-    border-color: {c['text3']} !important;
-}}
-
-/* Remove dark wrapper behind password eye */
+/* ════ PASSWORD FIELD ════ */
 div[data-testid="stTextInput"] div:has(> button[title="Show password text"]),
 div[data-testid="stTextInput"] div:has(> button[title="Hide password text"]) {{
-
-    background: {c['accent']} !important;
-    border-radius: 0 14px 14px 0 !important;
-
-    border: none !important;
-    box-shadow: none !important;
+    background: {c['accent']} !important; border-radius: 0 14px 14px 0 !important;
+    border: none !important; box-shadow: none !important;
 }}
-
-/* Actual eye button */
-button[title="Show password text"],
-button[title="Hide password text"] {{
-
-    background: transparent !important;
-
-    color: #FFF8F0 !important;
-
-    border: none !important;
-    box-shadow: none !important;
-
-    min-height: 52px !important;
+button[title="Show password text"], button[title="Hide password text"] {{
+    background: transparent !important; color: #FFF8F0 !important;
+    border: none !important; box-shadow: none !important; min-height: 52px !important;
 }}
-
-/* Hover */
-button[title="Show password text"]:hover,
-button[title="Hide password text"]:hover {{
-
-    background: {c['text3']} !important;
-}}
-
-/* Remove dark input outline */
+button[title="Show password text"]:hover, button[title="Hide password text"]:hover
+{{ background: {c['text3']} !important; }}
 .stTextInput input {{
-
-    border: 2px solid {c['border']}55 !important;
-    box-shadow: none !important;
-    outline: none !important;
-
-    background: {c['input_bg']} !important;
-    color: {c['text']} !important;
+    border: 2px solid {c['border']}55 !important; box-shadow: none !important;
+    outline: none !important; background: {c['input_bg']} !important; color: {c['text']} !important;
 }}
-
-/* Focus state */
 .stTextInput input:focus {{
-
     border: 2px solid {c['accent']} !important;
-
-    box-shadow: 0 0 0 2px {c['accent']}22 !important;
-    outline: none !important;
+    box-shadow: 0 0 0 2px {c['accent']}22 !important; outline: none !important;
 }}
-
-/* Wrapper */
-.stTextInput > div > div {{
-
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-}}
-
-input {{
-
-    outline: none !important;
-    box-shadow: none !important;
-    border-color: {c['border']}55 !important;
-}}
-
-/* Browser autofill fix */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-textarea:-webkit-autofill,
-select:-webkit-autofill {{
-
+.stTextInput > div > div {{ border: none !important; box-shadow: none !important; background: transparent !important; }}
+input {{ outline: none !important; box-shadow: none !important; border-color: {c['border']}55 !important; }}
+input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus {{
     -webkit-text-fill-color: {c['text']} !important;
-
     transition: background-color 9999s ease-in-out 0s !important;
-
     box-shadow: 0 0 0px 1000px {c['input_bg']} inset !important;
-
     border: 2px solid {c['accent']} !important;
 }}
 
-/* Autofill dropdown */
-input:-webkit-autofill::first-line {{
-    color: #FFF8F0 !important;
+/* REMOVE TOP GAP */
+[data-testid="stAppViewContainer"],
+.main,
+.block-container {{
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}}
+
+/* ════ MOBILE TOP BAR FIX ════ */
+@media (max-width: 768px) {{
+    
+
+    /* remove top spacing created by header */
+    [data-testid="stAppViewContainer"] {{
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }}
+
+    section[data-testid="stMain"]{{
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }}
+    
+    [data-testid="stMainBlockContainer"],
+    .block-container {{
+        padding-top: 0px !important;
+    }}
+}}
+
+/* ════ DESKTOP: HIDE SIDEBAR BUTTON ════ */
+@media (min-width: 769px) {{
+    [data-testid="stSidebarHeader"],
+    button[title="Hide sidebar"] {{
+        display:none !important;
+        visibility:hidden !important;
+    }}
+}}
+
+@media (min-width: 769px) {{
+
+    header[data-testid="stHeader"] {{
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+    }}
+}}
+
+/* desktop hide button */
+@media (min-width: 769px) {{
+
+    [data-testid="stExpandSidebarButton"] {{
+        display: none !important;
+    }}
+}}
+
+/* ════ MOBILE SIDEBAR BUTTON ════ */
+@media (max-width: 768px) {{
+
+    header[data-testid="stHeader"] {{
+        background: transparent !important;
+        height: 56px !important;
+        min-height: 56px !important;
+        border: none !important;
+        box-shadow: none !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 999998 !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+    }}
+
+    /* The >> button — target by exact span class from DevTools */
+    header[data-testid="stHeader"] button,
+    header[data-testid="stHeader"] button:focus,
+    header[data-testid="stHeader"] button:active {{
+        background: {c['accent']} !important;
+        border: none !important;
+        border-radius: 8px !important;
+        width: 32px !important;
+        height: 28px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
+        padding: 0 !important;
+        margin: 4px 0 0 6px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.35) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        flex-shrink: 0 !important;
+        position: relative !important;
+    }}
+
+    header[data-testid="stHeader"] button span,
+    span.st-emotion-cache-12bp31y,
+    span.exvv1vr0 {{
+        color: #FFFFFF !important;
+        font-size: 16px !important;
+        line-height: 1 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }}
+
+    header[data-testid="stHeader"] {{
+        background: transparent !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        border: none !important;
+        box-shadow: none !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 999998 !important;
+        width: auto !important;
+        display: flex !important;
+        align-items: center !important;
+    }}
+}}
+
+/* ════ DESKTOP: hide header entirely ════ */
+@media (min-width: 769px) {{
+    header[data-testid="stHeader"] {{
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+    }}
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="collapsedControl"],
+    [data-testid="stExpandSidebarButton"] {{
+        display: none !important;
+    }}
 }}
 </style>
 """, unsafe_allow_html=True)
-
 
 def render_navbar():
     c    = C()
@@ -1011,6 +846,7 @@ def home_page():
 # LOGIN
 # ══════════════════════════════════════════════════════════════════════════════
 def login_page():
+    
     st.markdown('<div class="pb-page">', unsafe_allow_html=True)
     c = C()
 
@@ -1118,6 +954,7 @@ def save_signup(name, oid, circle, role, email):
                     "name": name, "officer_id": oid, "circle": circle, "role": role, "email": email})
 
 def signup_page():
+    
     st.markdown('<div class="pb-page">', unsafe_allow_html=True)
     c = C()
 
@@ -1183,6 +1020,7 @@ def signup_page():
 # DISTRICT PICKER
 # ══════════════════════════════════════════════════════════════════════════════
 def district_page(df):
+    
     st.markdown('<div class="pb-page">', unsafe_allow_html=True)
     c = C()
     o = st.session_state.officer
