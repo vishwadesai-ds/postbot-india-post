@@ -1,15 +1,15 @@
 # 📮 PostBot — India Post District Intelligence Engine
 
-> PGP in Data Science & GenAI | Great Lakes Institute | Group 10 | Batch 2025–26
+> PGP in Data Science & GenAI | Great Lakes Institute | Batch 2025–26
 
 ## 🚀 Live Demo
-👉 **Streamlit App:** https://postbot-india-post.streamlit.app
+👉 **Streamlit App:**  [View->](https://postbot-india-post.streamlit.app/)
 
 ## 📊 Tableau Dashboards
 | Dashboard | Link |
 |-----------|------|
-| 🗺️ National Overview | [View →](https://public.tableau.com/app/profile/vishwadesai.ds/viz/IndiaPostInfrastructure/NationalOverview) |
-| 📍 District Intelligence | [View →](https://public.tableau.com/app/profile/vishwadesai.ds/viz/DistrictIntelligence/DistrictIntelligence) |
+| 🗺️ National Overview | [View->](https://public.tableau.com/app/profile/vishwadesai.ds/viz/IndiaPostInfrastructure/NationalOverview) |
+| 📍 District Intelligence | [View->](https://public.tableau.com/app/profile/vishwadesai.ds/viz/DistrictIntelligence/DistrictIntelligence) |
 
 ## 📌 Problem Statement
 India Post operates 1,65,000+ offices across 754 districts with wildly 
@@ -77,7 +77,7 @@ streamlit run app.py
 ## 👤 Author
 **Vishwa Desai**
 - Tableau: https://public.tableau.com/app/profile/vishwadesai.ds
-- LinkedIn: your-linkedin-url
+- LinkedIn: [View->](https://www.linkedin.com/in/vishwa-desai-ds/)
 
 ## 🏫 Program
 Great Lakes Institute of Management  
