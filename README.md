@@ -86,5 +86,5 @@ Mentor: Mr. Aishwarya Sarda
 
 ## 📸 Screenshots
 ![Streamlit App](assets/app_preview.png)
-![National Dashboard](assets/dashboard_national.png)
-![District Dashboard](assets/dashboard_district.png)
+![National Dashboard](assets/IndiaPostInfrastructure.png)
+![District Dashboard](assets/DistrictIntelligence.png)
